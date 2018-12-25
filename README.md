@@ -1,4 +1,3 @@
 # dataSet
-This is the image dataSet
 
-There is a image dataSet. We use it to extract image features
+There is an image dataSet.（But it is not whole） We use Pytorch to extract the image features
