@@ -17,6 +17,7 @@ class FeatureExtractor(nn.Module):
         self.submodule = submodule
         self.extracted_layers = extracted_layers
 
+    # 自己修改forward函数
     def forward(self, x):
         outputs = []
         for name, module in self.submodule._modules.items():
@@ -31,6 +32,7 @@ extract_list = ["conv1", "maxpool", "layer1", "avgpool", "fc"]
 img_path = "./1_00001.jpg"
 saved_path = "./1_00001.txt"
 resnet = models.resnet50(pretrained=True)
+# print(resnet) 可以打印看模型结构
 
 transform = transforms.Compose([
     transforms.Resize(256),
