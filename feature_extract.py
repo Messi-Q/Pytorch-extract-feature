@@ -2,8 +2,12 @@ import torch
 import torchvision
 import torch.nn as nn
 import torch.utils.data as data
+import numpy as np
+from PIL import Image
 from torch.autograd import Variable
 from torchvision import models, transforms
+
+use_gpu = torch.cuda.is_available()
 
 
 # 中间层特征提取
@@ -18,21 +22,31 @@ class FeatureExtractor(nn.Module):
         for name, module in self.submodule._modules.items():
             if name is "fc": x = x.view(x.size(0), -1)
             x = module(x)
-            print(name)
             if name in self.extracted_layers:
                 outputs.append(x)
         return outputs
 
 
-train_data = torchvision.datasets.MNIST(root='./mnist', train=True, transform=torchvision.transforms.ToTensor(),
-                                        download=False)
-train_loader = data.DataLoader(train_data, batch_size=64, shuffle=True)
+extract_list = ["conv1", "maxpool", "layer1", "avgpool", "fc"]
+img_path = "./1_00001.jpg"
+saved_path = "./1_00001.txt"
+resnet = models.resnet50(pretrained=True)
 
-test_data = torchvision.datasets.MNIST(root='./mnist', train=False)
-test_x = Variable(torch.unsqueeze(test_data.test_data, dim=1).type(torch.FloatTensor)) / 255
-# test_x = Variable(torch.unsqueeze(test_data.test_data, dim=1).type(torch.FloatTensor)).cuda() / 255
-test_y = test_data.test_labels
-# test_y = test_data.test_labels.cuda()
+transform = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor()]
+)
 
-vgg16 = models.vgg16(pretrained=True)
-print(vgg16)
+img = Image.open(img_path)
+img = transform(img)
+
+x = Variable(torch.unsqueeze(img, dim=0).float(), requires_grad=False)
+
+if use_gpu:
+    x = x.cuda()
+    resnet = resnet.cuda()
+
+extract_result = FeatureExtractor(resnet, extract_list)
+print(extract_result(x)[4])  # [0]:conv1  [1]:maxpool  [2]:layer1  [3]:avgpool  [4]:fc
+
